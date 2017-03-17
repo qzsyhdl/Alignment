@@ -2,29 +2,22 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
 	<meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
-	<script src="http://g.tbcdn.cn/kissy/k/1.3.2/seed-min.js"></script>
+	<script src="http://g.tbcdn.cn/kissy/k/1.3.2/seed.js"></script>
 	<script>
-		(function() {
-			var S = KISSY;
+		var S = KISSY;
 
-			S.config({
-				debug: true
-			});
+		S.config({
+			debug: true,
+			packages:[
+				{
+					name:"kg/align/1.0.0",
+					path:'./',
+					charset:"utf-8",
+					ignorePackageNameInUri:true
+				}
+			]
+		});
 
-			var srcPath = "./";
-
-			S.config({
-				packages:[
-					{
-						name:"kg/align/1.0.0",
-						path:'./',
-						charset:"utf-8",
-						ignorePackageNameInUri:true
-					}
-				]
-			})
-
-		})();
 	</script>
 	<title>对齐组件</title>
 	<style>
@@ -105,12 +98,12 @@
 			var doms = S.one('#canvas').html();
 
 			S.all('.menu').on('click', function() {
-				var selectors = S.all('.item'); //对齐元素
-				var menuType = S.one(this).attr('menu-type'); //对齐方式
-				var menu_0 = ['reset']; //重置
-				var menu_1 = ['top', 'bottom', 'left', 'right', 'center', 'vertical']; //普通对齐
-				var menu_2 = ['canvasTop', 'canvasBottom', 'canvasLeft', 'canvasRight', 'canvasCenter', 'canvasVertical']; //与画布对齐
-				var menu_3 = ['sortCenter', 'sortVertical'];
+				var selectors = S.all('.item'), //对齐元素
+					menuType = S.one(this).attr('menu-type'), //对齐方式
+					menu_0 = ['reset'], //重置
+					menu_1 = ['top', 'bottom', 'left', 'right', 'center', 'vertical'], //普通对齐
+					menu_2 = ['canvasTop', 'canvasBottom', 'canvasLeft', 'canvasRight', 'canvasCenter', 'canvasVertical'], //与画布对齐
+					menu_3 = ['sortCenter', 'sortVertical'];
 
 				// 重置
 				if (S.inArray(menuType, menu_0)) {
@@ -137,7 +130,6 @@
 						console.log(data);
 					});
 				}
-
 
 			})
 		});

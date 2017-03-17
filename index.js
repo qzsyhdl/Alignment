@@ -1,67 +1,50 @@
 /**
  * @align 对齐组件
- * @author qzhdl@foxmail.com
+ * @author dinglun.hong@gmail.com
  *
  * 所有的对齐都是用offset属性(相对于页面文档的偏移值)
  */
-
 KISSY.add(function(S, Node) {
 
 	/**
-	 * 获取元素，元素个数必须大于或等于2
+	 * 获取对齐元素
+	 * @param  {String|HTMLCollection|Array<HTMLElement}  selectors 元素
+	 * @param  {Boolean} 								  isMulti   元素个数是否必须大于1
+	 * @return {HTMLCollection}            				  元素集合
 	 */
-	function getAlignElems(selectors) {
-		var elems = null;
-
+	function getAlignElem(selectors, isMulti) {
 		if (S.isObject(selectors)) {
-			elems = selectors
-
-		} else if (/^\./i.test(selectors)) {
-			elems = S.all(selectors)
-
-		} else if (S.one(selectors)) {
-			elems = S.all(selectors)
-
-		}
-
-		if (elems != null && elems.length > 1) {
-			return elems
-
-		} else {
-			throw new Error('Align: The number of elements must be greater than one!')
-
-		}
-	}
-
-
-	/**
-	 * 获取元素
-	 */
-	function getAlignElem(selectors) {
-		var elems = null;
-
-		if (S.isObject(selectors)) {
-			elems = selectors
+			selectors = selectors
 
 		} else if(/^#/i.test(selectors)) {
-			elems = S.one(selectors)
+			selectors = S.one(selectors)
 
 		} else if (/^\./i.test(selectors)) {
-			elems = S.all(selectors)
+			selectors = S.all(selectors)
 
 		} else if (S.one(selectors)) {
-			elems = S.all(selectors)
+			selectors = isMulti === true ? S.all(selectors) : S.one(selectors)
 
 		}
 
-		if (elems != null) {
-			return elems
+		if (isMulti === true) {
+			if (selectors != null && selectors.length > 1) {
+				return selectors
 
+			} else {
+				throw new Error('Align: The number of elements must be greater than one!')
+			}
 		} else {
-			throw new Error('Align: Elements not found');
+			if (selectors != null && selectors.length > 0) {
+				return selectors
 
+			} else {
+				throw new Error('Align: Element not found');
+			}
 		}
+		
 	}
+
 
 	/**
 	 * 获取对齐元素中最靠顶边的位置
@@ -215,44 +198,15 @@ KISSY.add(function(S, Node) {
 	 * @return {Element} 元素节点
 	 */
 	function getSortAsc(selectors, cssName) {
-		var len = selectors.length;
-		for (var i = 0; i < len; i++) {
-			for (var j = 0; j < len - i - 1; j++) {
-				var prev = selectors.item(j).offset()[cssName],
-					next = selectors.item(j+1).offset()[cssName];
-				if (prev > next) {
-					var temp = selectors.item(j);
-					selectors[j] = selectors.item(j+1);
-					selectors[j+1] = temp
-				}
-			}
-		}
-		return selectors
+		selectors = Array.prototype.slice.call(selectors);
+		selectors.sort(function(a, b) {
+			return parseInt(a.style[cssName], 10) > parseInt(b.style[cssName], 10)
+		});
+
+		return S.all(selectors)
 	}
 
 	
-	/*// 返回元素位置信息格式
-	 var data = [
-		{
-			'prevX': 200, //对齐前Left值
-			'prevY': 200, //对齐前Top值
-			'nextX': 400, //对齐后Left值
-			'nextY': 400  //对齐后Top值
-		},
-		{
-			'prevX': 200,
-			'prevY': 200,
-			'nextX': 400,
-			'nextY': 400 
-		},
-		{
-			'prevX': 200,
-			'prevY': 200,
-			'nextX': 400,
-			'nextY': 400 
-		}
-	];*/
-
 	return {
 		/**
 		 * 顶对齐
@@ -261,7 +215,7 @@ KISSY.add(function(S, Node) {
 		 * @return {Array}              元素位置信息
 		 */
 		top: function(selectors, callback) {
-			var selectors = getAlignElems(selectors),
+			var selectors = getAlignElem(selectors, true),
 				minTop = getMinTop(selectors),
 				data = []; //记录元素位置信息
 
@@ -272,17 +226,18 @@ KISSY.add(function(S, Node) {
 				elem.offset({top: minTop});
 
 				data.push({
-					'prevX': prevX,
-					'prevY': prevY,
-					'nextX': prevX,
-					'nextY': parseInt(elem.css('top'), 10)
+					node: elem,
+					prevX: prevX,
+					prevY: prevY,
+					nextX: prevX,
+					nextY: parseInt(elem.css('top'), 10)
 				})
 			});
 
 			if (S.isFunction(callback)) {
 				callback(data)
 
-			} else if (callback !== undefined) {
+			} else if (callback !== void 0) {
 				throw new Error('Align: callback must be function!')
 
 			}
@@ -296,7 +251,7 @@ KISSY.add(function(S, Node) {
 		 * @return {Array}              元素位置信息
 		 */
 		bottom: function(selectors, callback) {
-			var selectors = getAlignElems(selectors),
+			var selectors = getAlignElem(selectors, true),
 				maxBottom = getMaxBottom(selectors),
 				data = []; //记录元素位置信息
 
@@ -307,17 +262,18 @@ KISSY.add(function(S, Node) {
 				elem.offset({top: maxBottom - elem.height()});
 
 				data.push({
-					'prevX': prevX,
-					'prevY': prevY,
-					'nextX': prevX,
-					'nextY': parseInt(elem.css('top'), 10)
+					node: elem,
+					prevX: prevX,
+					prevY: prevY,
+					nextX: prevX,
+					nextY: parseInt(elem.css('top'), 10)
 				})
 			});
 
 			if (S.isFunction(callback)) {
 				callback(data)
 
-			} else if (callback != undefined) {
+			} else if (callback !== void 0) {
 				throw new Error('Align: callback must be function!')
 
 			}
@@ -331,7 +287,7 @@ KISSY.add(function(S, Node) {
 		 * @return {Array}              元素位置信息
 		 */
 		left: function(selectors, callback) {
-			var selectors = getAlignElems(selectors),
+			var selectors = getAlignElem(selectors, true),
 				minLeft = getMinLeft(selectors),
 				data = []; //记录元素位置信息
 
@@ -342,17 +298,18 @@ KISSY.add(function(S, Node) {
 				elem.offset({left: minLeft});
 
 				data.push({
-					'prevX': prevX,
-					'prevY': prevY,
-					'nextX': parseInt(elem.css('left'), 10),
-					'nextY': prevY
+					node: elem,
+					prevX: prevX,
+					prevY: prevY,
+					nextX: parseInt(elem.css('left'), 10),
+					nextY: prevY
 				})
 			});
 
 			if (S.isFunction(callback)) {
 				callback(data)
 
-			} else if (callback != undefined) {
+			} else if (callback !== void 0) {
 				throw new Error('Align: callback must be function!')
 
 			}
@@ -366,7 +323,7 @@ KISSY.add(function(S, Node) {
 		 * @return {Array}              元素位置信息
 		 */
 		right: function(selectors, callback) {
-			var selectors = getAlignElems(selectors),
+			var selectors = getAlignElem(selectors, true),
 				maxRight = getMaxRight(selectors),
 				data = []; //记录元素位置信息
 
@@ -377,17 +334,18 @@ KISSY.add(function(S, Node) {
 				elem.offset({left: maxRight - elem.width()});
 
 				data.push({
-					'prevX': prevX,
-					'prevY': prevY,
-					'nextX': parseInt(elem.css('left'), 10),
-					'nextY': prevY
+					node: elem,
+					prevX: prevX,
+					prevY: prevY,
+					nextX: parseInt(elem.css('left'), 10),
+					nextY: prevY
 				})
 			});
 
 			if (S.isFunction(callback)) {
 				callback(data)
 
-			} else if (callback != undefined) {
+			} else if (callback !== void 0) {
 				throw new Error('Align: callback must be function!')
 
 			}
@@ -401,7 +359,7 @@ KISSY.add(function(S, Node) {
 		 * @return {Array}              元素位置信息
 		 */
 		center: function(selectors, callback) {
-			var selectors = getAlignElems(selectors),
+			var selectors = getAlignElem(selectors, true),
 				center = getCenter(selectors),
 				data = []; //记录元素位置信息
 
@@ -412,17 +370,18 @@ KISSY.add(function(S, Node) {
 				elem.offset({left: center - Math.floor(elem.width() / 2)});
 
 				data.push({
-					'prevX': prevX,
-					'prevY': prevY,
-					'nextX': parseInt(elem.css('left'), 10),
-					'nextY': prevY
+					node: elem,
+					prevX: prevX,
+					prevY: prevY,
+					nextX: parseInt(elem.css('left'), 10),
+					nextY: prevY
 				})
 			});
 
 			if (S.isFunction(callback)) {
 				callback(data)
 
-			} else if (callback != undefined) {
+			} else if (callback !== void 0) {
 				throw new Error('Align: callback must be function!')
 
 			}
@@ -436,7 +395,7 @@ KISSY.add(function(S, Node) {
 		 * @return {Array}              元素位置信息
 		 */
 		vertical: function(selectors, callback) {
-			var selectors = getAlignElems(selectors),
+			var selectors = getAlignElem(selectors, true),
 				middle = getMiddle(selectors),
 				data = []; //记录元素位置信息
 
@@ -447,17 +406,18 @@ KISSY.add(function(S, Node) {
 				elem.offset({top: middle - Math.floor(elem.height() / 2)});
 
 				data.push({
-					'prevX': prevX,
-					'prevY': prevY,
-					'nextX': prevX,
-					'nextY': parseInt(elem.css('top'), 10)
+					node: elem,
+					prevX: prevX,
+					prevY: prevY,
+					nextX: prevX,
+					nextY: parseInt(elem.css('top'), 10)
 				})
 			});
 
 			if (S.isFunction(callback)) {
 				callback(data)
 
-			} else if (callback != undefined) {
+			} else if (callback !== void 0) {
 				throw new Error('Align: callback must be function!')
 
 			}
@@ -468,10 +428,9 @@ KISSY.add(function(S, Node) {
 		 * @param  {String|Object}   selectors  对齐元素
 		 * @param  {String|Object}   canvas 	画布元素
 		 * @param  {Function} callback  		回调函数
-		 * @param  {Boolean} isIncludeBorder    是否包括边框
 		 * @return {Array}                      元素位置信息
 		 */
-		canvasTop: function(selectors, canvas, callback, isIncludeBorder) {
+		canvasTop: function(selectors, canvas, callback) {
 			var selectors = getAlignElem(selectors),
 				canvas = getAlignElem(canvas),
 				canvasOffsetTop = canvas.offset().top,
@@ -482,21 +441,21 @@ KISSY.add(function(S, Node) {
 				var prevX = parseInt(elem.css('left'), 10),
 					prevY = parseInt(elem.css('top'), 10);
 
-				// 与画布对齐不包括边框
-				elem.offset({top: elem.offset().top - distance - (isIncludeBorder === true ? 0 : parseInt(elem.css('border-top'), 10))});
+				elem.offset({top: elem.offset().top - distance});
 
 				data.push({
-					'prevX': prevX,
-					'prevY': prevY,
-					'nextX': prevX,
-					'nextY': parseInt(elem.css('top'), 10)
+					node: elem,
+					prevX: prevX,
+					prevY: prevY,
+					nextX: prevX,
+					nextY: parseInt(elem.css('top'), 10)
 				})
 			});
 
 			if (S.isFunction(callback)) {
 				callback(data)
 
-			} else if (callback != undefined) {
+			} else if (callback !== void 0) {
 				throw new Error('Align: callback must be function!')
 
 			}
@@ -508,10 +467,9 @@ KISSY.add(function(S, Node) {
 		 * @param  {String|Object}   selectors  对齐元素
 		 * @param  {String|Object}   canvas 	画布元素
 		 * @param  {Function} callback  		回调函数
-		 * @param  {Boolean} isIncludeBorder    是否包括边框
 		 * @return {Array}                      元素位置信息
 		 */
-		canvasBottom: function(selectors, canvas, callback, isIncludeBorder) {
+		canvasBottom: function(selectors, canvas, callback) {
 			var selectors = getAlignElem(selectors),
 				canvas = getAlignElem(canvas),
 				maxBottom = getMaxBottom(selectors),
@@ -523,21 +481,21 @@ KISSY.add(function(S, Node) {
 				var prevX = parseInt(elem.css('left'), 10),
 					prevY = parseInt(elem.css('top'), 10);
 
-				// 与画布对齐不包括边框
-				elem.offset({top: elem.offset().top + distance - (isIncludeBorder === true ? 0 : parseInt(elem.css('border-top'), 10))});
+				elem.offset({top: elem.offset().top + distance});
 
 				data.push({
-					'prevX': prevX,
-					'prevY': prevY,
-					'nextX': prevX,
-					'nextY': parseInt(elem.css('top'), 10)
+					node: elem,
+					prevX: prevX,
+					prevY: prevY,
+					nextX: prevX,
+					nextY: parseInt(elem.css('top'), 10)
 				})
 			});
 
 			if (S.isFunction(callback)) {
 				callback(data)
 
-			} else if (callback != undefined) {
+			} else if (callback !== void 0) {
 				throw new Error('Align: callback must be function!')
 
 			}
@@ -549,10 +507,9 @@ KISSY.add(function(S, Node) {
 		 * @param  {String|Object}   selectors  对齐元素
 		 * @param  {String|Object}   canvas 	画布元素
 		 * @param  {Function} callback  		回调函数
-		 * @param  {Boolean} isIncludeBorder    是否包括边框
 		 * @return {Array}                      元素位置信息
 		 */
-		canvasLeft: function(selectors, canvas, callback, isIncludeBorder) {
+		canvasLeft: function(selectors, canvas, callback) {
 			var selectors = getAlignElem(selectors),
 				canvas = getAlignElem(canvas),
 				canvasOffsetLeft = canvas.offset().left,
@@ -563,14 +520,14 @@ KISSY.add(function(S, Node) {
 				var prevX = parseInt(elem.css('left'), 10),
 					prevY = parseInt(elem.css('top'), 10);
 
-				// 与画布对齐不包括边框
-				elem.offset({left: elem.offset().left - distance - (isIncludeBorder === true ? 0 : parseInt(elem.css('border-left'), 10))});
+				elem.offset({left: elem.offset().left - distance});
 
 				data.push({
-					'prevX': prevX,
-					'prevY': prevY,
-					'nextX': parseInt(elem.css('left'), 10),
-					'nextY': prevY
+					node: elem,
+					prevX: prevX,
+					prevY: prevY,
+					nextX: parseInt(elem.css('left'), 10),
+					nextY: prevY
 				})
 
 			});
@@ -578,7 +535,7 @@ KISSY.add(function(S, Node) {
 			if (S.isFunction(callback)) {
 				callback(data)
 
-			} else if (callback != undefined) {
+			} else if (callback !== void 0) {
 				throw new Error('Align: callback must be function!')
 
 			}
@@ -589,10 +546,9 @@ KISSY.add(function(S, Node) {
 		 * @param  {String|Object}   selectors  对齐元素
 		 * @param  {String|Object}   canvas 	画布元素
 		 * @param  {Function} callback  		回调函数
-		 * @param  {Boolean} isIncludeBorder    是否包括边框
 		 * @return {Array}                      元素位置信息
 		 */
-		canvasRight: function(selectors, canvas, callback, isIncludeBorder) {
+		canvasRight: function(selectors, canvas, callback) {
 			var selectors = getAlignElem(selectors),
 				canvas = getAlignElem(canvas),
 				maxRight = getMaxRight(selectors),
@@ -604,21 +560,21 @@ KISSY.add(function(S, Node) {
 				var prevX = parseInt(elem.css('left'), 10),
 					prevY = parseInt(elem.css('top'), 10);
 
-				// 与画布对齐不包括边框	
-				elem.offset({left: elem.offset().left + distance - (isIncludeBorder === true ? 0 : parseInt(elem.css('border-right'), 10))});
+				elem.offset({left: elem.offset().left + distance});
 
 				data.push({
-					'prevX': prevX,
-					'prevY': prevY,
-					'nextX': parseInt(elem.css('left'), 10),
-					'nextY': prevY
+					node: elem,
+					prevX: prevX,
+					prevY: prevY,
+					nextX: parseInt(elem.css('left'), 10),
+					nextY: prevY
 				})
 			});
 
 			if (S.isFunction(callback)) {
 				callback(data)
 
-			} else if (callback != undefined) {
+			} else if (callback !== void 0) {
 				throw new Error('Align: callback must be function!')
 
 			}
@@ -629,10 +585,9 @@ KISSY.add(function(S, Node) {
 		 * @param  {String|Object}   selectors  对齐元素
 		 * @param  {String|Object}   canvas 	画布元素
 		 * @param  {Function} callback  		回调函数
-		 * @param  {Boolean} isIncludeBorder    是否包括边框
 		 * @return {Array}                      元素位置信息
 		 */
-		canvasCenter: function(selectors, canvas, callback, isIncludeBorder) {
+		canvasCenter: function(selectors, canvas, callback) {
 			var selectors = getAlignElem(selectors),
 				canvas = getAlignElem(canvas),
 				center = getCenter(selectors),
@@ -644,21 +599,21 @@ KISSY.add(function(S, Node) {
 				var prevX = parseInt(elem.css('left'), 10),
 					prevY = parseInt(elem.css('top'), 10);
 
-				// 与画布对齐不包括边框	
-				elem.offset({left: elem.offset().left + distance - (isIncludeBorder === true ? 0 : parseInt(elem.css('border-left'), 10))});
+				elem.offset({left: elem.offset().left + distance});
 
 				data.push({
-					'prevX': prevX,
-					'prevY': prevY,
-					'nextX': parseInt(elem.css('left'), 10),
-					'nextY': prevY
+					node: elem,
+					prevX: prevX,
+					prevY: prevY,
+					nextX: parseInt(elem.css('left'), 10),
+					nextY: prevY
 				})
 			});
 
 			if (S.isFunction(callback)) {
 				callback(data)
 
-			} else if (callback != undefined) {
+			} else if (callback !== void 0) {
 				throw new Error('Align: callback must be function!')
 
 			}
@@ -670,10 +625,9 @@ KISSY.add(function(S, Node) {
 		 * @param  {String|Object}   selectors  对齐元素
 		 * @param  {String|Object}   canvas 	画布元素
 		 * @param  {Function} callback  		回调函数
-		 * @param  {Boolean} isIncludeBorder    是否包括边框
 		 * @return {Array}                      元素位置信息
 		 */
-		canvasVertical: function(selectors, canvas, callback, isIncludeBorder) {
+		canvasVertical: function(selectors, canvas, callback) {
 			var selectors = getAlignElem(selectors),
 				canvas = getAlignElem(canvas),
 				middle = getMiddle(selectors),
@@ -685,21 +639,21 @@ KISSY.add(function(S, Node) {
 				var prevX = parseInt(elem.css('left'), 10),
 					prevY = parseInt(elem.css('top'), 10);
 
-				// 与画布对齐不包括边框		
-				elem.offset({top: elem.offset().top + distance - (isIncludeBorder === true ? 0 : parseInt(elem.css('border-top'), 10))});
+				elem.offset({top: elem.offset().top + distance});
 
 				data.push({
-					'prevX': prevX,
-					'prevY': prevY,
-					'nextX': prevX,
-					'nextY': parseInt(elem.css('top'), 10)
+					node: elem,
+					prevX: prevX,
+					prevY: prevY,
+					nextX: prevX,
+					nextY: parseInt(elem.css('top'), 10)
 				})
 			});
 
 			if (S.isFunction(callback)) {
 				callback(data)
 
-			} else if (callback != undefined) {
+			} else if (callback !== void 0) {
 				throw new Error('Align: callback must be function!')
 
 			}
@@ -714,7 +668,7 @@ KISSY.add(function(S, Node) {
 		 * @return {Array}            			元素位置信息
 		 */
 		sortCenter: function(selectors, space, callback) {
-			var selectors = getAlignElems(selectors),
+			var selectors = getAlignElem(selectors, true),
 				space = parseInt(space, 10),
 				data = [];
 
@@ -734,17 +688,18 @@ KISSY.add(function(S, Node) {
 				}
 
 				data.push({
-					'prevX': prevX,
-					'prevY': prevY,
-					'nextX': parseInt(elem.css('left'), 10),
-					'nextY': prevY
+					node: elem,
+					prevX: prevX,
+					prevY: prevY,
+					nextX: parseInt(elem.css('left'), 10),
+					nextY: prevY
 				})
 			});
 
 			if (S.isFunction(callback)) {
 				callback(data)
 
-			} else if (callback != undefined) {
+			} else if (callback !== void 0) {
 				throw new Error('Align: callback must be function!')
 
 			}
@@ -758,7 +713,7 @@ KISSY.add(function(S, Node) {
 		 * @return {Array}             			元素位置信息
 		 */
 		sortVertical: function(selectors, space, callback) {
-			var selectors = getAlignElems(selectors),
+			var selectors = getAlignElem(selectors, true),
 				space = parseInt(space, 10),
 				data = [];
 
@@ -779,17 +734,18 @@ KISSY.add(function(S, Node) {
 				}
 
 				data.push({
-					'prevX': prevX,
-					'prevY': prevY,
-					'nextX': prevX,
-					'nextY': parseInt(elem.css('top'), 10)
+					node: elem,
+					prevX: prevX,
+					prevY: prevY,
+					nextX: prevX,
+					nextY: parseInt(elem.css('top'), 10)
 				})
 			});
 
 			if (S.isFunction(callback)) {
 				callback(data)
 
-			} else if (callback != undefined) {
+			} else if (callback !== void 0) {
 				throw new Error('Align: callback must be function!')
 
 			}
